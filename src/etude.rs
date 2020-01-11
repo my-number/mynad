@@ -68,33 +68,9 @@ pub fn main() {
 
     let res = mynacard
         .transmit(
-            &apdu::compute_sig(myna::test_vector::MSG1_SHA256)[..],
+            &apdu::compute_sig(myna::test_vector::PKCS1_ENCODED)[..],
             &mut buf,
         )
         .unwrap();
-    println!("Verifying with JPKI Auth Key {:x?}", res);
-}
-struct FuzzApdu {
-    ins: u8,
-    sw1: u8,
-    sw2: u8,
-}
-pub fn fuzz() {
-    let mynacard = MynaCard::search_card().unwrap();
-    let mut buf = [0u8; 300];
-    let mut avail = &mut Vec::<FuzzApdu>::new();
-    for i in 0..255 {
-        let res = mynacard
-            .transmit(&make_apdu(0x00, i, (0, 0), &[], 0)[..], &mut buf)
-            .unwrap();
-        if res.sw1 == 0x6d && res.sw2 == 0x00 {
-            continue;
-        }
-        println!("INS: 0x{:x}, SW: {:x} {:x}", i, res.sw1, res.sw2);
-        avail.push(FuzzApdu {
-            ins: i,
-            sw1: res.sw1,
-            sw2: res.sw2,
-        });
-    }
+    println!("Signing with JPKI Auth Key {:x?}", res);
 }

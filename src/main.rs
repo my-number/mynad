@@ -1,4 +1,4 @@
 mod etude;
 fn main() {
-    etude::fuzz();
+    etude::main();
 }
