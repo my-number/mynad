@@ -17,6 +17,7 @@ impl MynaCard {
         let buflen = ctx.list_readers_len()?;
         let mut buf = vec![0u8; buflen];
         let mut readers = ctx.list_readers(&mut buf)?;
+        readers.next();
         let reader = match readers.next() {
             Some(r) => r,
             None => return Err(pcsc::Error::ReaderUnavailable),
@@ -72,5 +73,5 @@ pub fn main() {
             &mut buf,
         )
         .unwrap();
-    println!("Signing with JPKI Auth Key {:x?}", res);
+    println!("Signing with JPKI Auth Key {:?}", res);
 }
