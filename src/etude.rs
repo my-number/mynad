@@ -1,5 +1,5 @@
 extern crate pcsc;
-use myna::card::{apdu, binary_reader::BinaryReader, make_apdu};
+use myna::card::{apdu, binary_reader::BinaryReader, make_apdu, responder::Responder};
 pub struct MynaCard {
     ctx: Option<pcsc::Context>,
     card: Option<pcsc::Card>,
@@ -44,34 +44,9 @@ impl MynaCard {
         }
     }
 }
+
 pub fn main() {
     let mynacard = MynaCard::search_card().unwrap();
     let mut buf = [0u8; 300];
-    let res = mynacard
-        .transmit(&apdu::select_jpki_ap()[..], &mut buf)
-        .unwrap();
-    println!("Selecting JPKI AP {:x?}", res);
-
-    let res = mynacard
-        .transmit(&apdu::select_jpki_auth_pin()[..], &mut buf)
-        .unwrap();
-    println!("Selecting JPKI Auth PIN {:x?}", res);
-
-    let res = mynacard
-        .transmit(&apdu::verify("1919")[..], &mut buf)
-        .unwrap();
-    println!("Verifying PIN {:x?}", res);
-
-    let res = mynacard
-        .transmit(&apdu::select_jpki_auth_key()[..], &mut buf)
-        .unwrap();
-    println!("Selecting JPKI Auth Key {:x?}", res);
-
-    let res = mynacard
-        .transmit(
-            &apdu::compute_sig(myna::test_vector::PKCS1_ENCODED)[..],
-            &mut buf,
-        )
-        .unwrap();
-    println!("Signing with JPKI Auth Key {:?}", res);
+    Responder::new(|data| mynacard.transmit(data, &buf))
 }
