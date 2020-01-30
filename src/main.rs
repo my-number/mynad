@@ -1,4 +1,5 @@
 mod etude;
+mod server;
 fn main() {
-    etude::main();
+    server::start();
 }

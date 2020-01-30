@@ -10,3 +10,7 @@ edition = "2018"
 myna = { path = "../myna" }
 hex-literal = "0.2.1"
 pcsc = "2.3.1"
+jsonrpc-core = "14.0.5"
+jsonrpc-http-server = "14.0.5"
+jsonrpc-derive = "14.0.5"
+jsonrpc-core-client = "14.0.5"
