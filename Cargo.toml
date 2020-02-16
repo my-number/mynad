@@ -7,6 +7,10 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-myna = { path = "../myna" }
 hex-literal = "0.2.1"
 pcsc = "2.3.1"
+
+[dependencies.myna]
+git = 'https://github.com/yuki-js/myna.git'
+branch = 'master'
+default-features = false
