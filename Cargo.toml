@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 hex-literal = "0.2.1"
 pcsc = "2.3.1"
+sha2 = "0.8.1"
 
 [dependencies.myna]
 git = 'https://github.com/yuki-js/myna.git'
