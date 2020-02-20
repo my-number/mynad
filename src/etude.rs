@@ -7,6 +7,10 @@ use myna::card::{
     make_apdu,
     apdu::{ApduRes, Apdu},
 };
+use codec::{Encode};
+use sp_core::{Blake2Hasher, Hasher};
+use crate::types;
+
 pub struct MynaCard {
     ctx: Option<pcsc::Context>,
     card: Option<pcsc::Card>,
@@ -47,16 +51,12 @@ pub fn main() {
         ApduRes::from_apdu(buf)
     });
     responder.select_jpki_ap().unwrap();
-    responder.select_jpki_cert_auth().unwrap();
-    let cert = responder.read_binary().unwrap();
-    let mut hasher = Sha256::new();
-    hasher.input(cert);
-    let hash = hasher.result();
+    let hash = hex!("47d499fa3fe154357e182c952cc8c6a60e2c197d97a1244ca869b50de370cab8");
     println!("{:?}", hash);
     responder.select_jpki_auth_pin().unwrap();
     responder.verify_pin("1919").unwrap();
     responder.select_jpki_auth_key().unwrap();
-    let sig = responder.compute_sig(&hash);
+    let sig = responder.compute_sig(&hash[..]);
 
-    println!("{:?}", sig);
+    println!("{:?}", sig.unwrap());
 }

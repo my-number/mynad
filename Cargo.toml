@@ -11,7 +11,33 @@ hex-literal = "0.2.1"
 pcsc = "2.3.1"
 sha2 = "0.8.1"
 
+[dependencies.frame-support]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+rev = '3e651110aa06aa835790df63410a29676243fc54'
+version = '2.0.0'
+
 [dependencies.myna]
 git = 'https://github.com/yuki-js/myna.git'
 branch = 'master'
 default-features = false
+
+[dependencies.rsa]
+version = "0.2.0"
+
+[dependencies.sp-core]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+rev = '3e651110aa06aa835790df63410a29676243fc54'
+version = '2.0.0'
+
+[dependencies.codec]
+package = 'parity-scale-codec'
+version = '1.0.0'
+
+[features]
+default = ['std']
+std = [
+    'frame-support/std',
+    'sp-core/std'
+]
