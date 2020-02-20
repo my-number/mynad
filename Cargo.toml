@@ -13,9 +13,12 @@ jsonrpc-core = "14.0.5"
 jsonrpc-http-server = "14.0.5"
 jsonrpc-derive = "14.0.5"
 jsonrpc-core-client = "14.0.5"
+sha2 = "0.8.1"
 
 [dependencies.myna]
 git = 'https://github.com/yuki-js/myna.git'
 branch = 'master'
 default-features = false
 
+[dependencies.rsa]
+version = "0.2.0"

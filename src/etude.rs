@@ -1,12 +1,16 @@
 extern crate pcsc;
 use hex_literal::hex;
-
+use sha2::{Sha256, Digest};
 use myna::card::{
     apdu,
     binary_reader::BinaryReader,
     make_apdu,
-    responder::{ApduRes, Responder},
+    apdu::{ApduRes, Apdu},
 };
+use codec::{Encode};
+use sp_core::{Blake2Hasher, Hasher};
+use crate::types;
+
 pub struct MynaCard {
     ctx: Option<pcsc::Context>,
     card: Option<pcsc::Card>,
@@ -41,16 +45,18 @@ impl MynaCard {
 pub fn main() {
     let mynacard = MynaCard::search_card().unwrap();
 
-    let mut responder = Responder::new(|data| {
+    let mut responder = Apdu::new(|data| {
         let mut buf = [0u8; 300];
         let buf = mynacard.transmit(data, &mut buf).unwrap();
         ApduRes::from_apdu(buf)
     });
     responder.select_jpki_ap().unwrap();
+    let hash = hex!("47d499fa3fe154357e182c952cc8c6a60e2c197d97a1244ca869b50de370cab8");
+    println!("{:?}", hash);
     responder.select_jpki_auth_pin().unwrap();
     responder.verify_pin("1919").unwrap();
     responder.select_jpki_auth_key().unwrap();
-    let sig = responder.compute_sig(&[0;245]);
+    let sig = responder.compute_sig(&hash[..]);
 
-    println!("{:?}", sig);
+    println!("{:?}", sig.unwrap());
 }
