@@ -10,6 +10,7 @@ use myna::card::{
 use codec::{Encode};
 use sp_core::{Blake2Hasher, Hasher};
 use crate::types;
+use hex::decode;
 
 pub struct MynaCard {
     ctx: Option<pcsc::Context>,
@@ -56,7 +57,7 @@ pub fn main() {
     responder.select_jpki_auth_pin().unwrap();
     responder.verify_pin("1919").unwrap();
     responder.select_jpki_auth_key().unwrap();
+    let hash = decode(hashHex).unwrap();
     let sig = responder.compute_sig(&hash[..]);
-
     println!("{:?}", sig.unwrap());
 }
