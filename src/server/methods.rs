@@ -1,3 +1,4 @@
+use hex::decode;
 use jsonrpc_core::{
     types::{
         error::{Error as RpcErr, ErrorCode},
@@ -5,18 +6,14 @@ use jsonrpc_core::{
     },
     IoHandler, Result,
 };
-use myna::card::{
-    apdu::*
-};
-use std::sync::{Arc, RwLock};
 use jsonrpc_derive::rpc;
+use myna::card::apdu::*;
 use pcsc::{Card, Context, Scope};
+use serde_json::json;
 use std::error::Error;
 use std::ffi::CStr;
-use hex::decode;
-use serde_json::json;
+use std::sync::{Arc, RwLock};
 static mut ctx: Option<&'static Context> = None;
-
 
 #[rpc]
 pub trait Rpc {
@@ -30,18 +27,20 @@ pub trait Rpc {
     fn get_cert(&self, fd: u64) -> Result<Value>;
     #[rpc(name = "computeSig")]
     fn compute_sig(&self, fd: u64, pin: String, hashHex: String) -> Result<Value>;
+    #[rpc(name = "recconect")]
+    fn reconnect(&self, fd: u64) -> Result<u64>;
 }
 
 pub struct RpcImpl {
     ctx: Context,
-    fd: Arc<RwLock<Vec<Card>>>
+    fd: Arc<RwLock<Vec<Card>>>,
 }
 
 impl Default for RpcImpl {
     fn default() -> Self {
         Self {
             ctx: Context::establish(Scope::User).unwrap(),
-            fd: Arc::new(RwLock::new(Vec::new()))
+            fd: Arc::new(RwLock::new(Vec::new())),
         }
     }
 }
@@ -63,18 +62,18 @@ impl Rpc for RpcImpl {
         let readers: Vec<String> = readerIter
             .map(|s| s.to_str().unwrap().to_string())
             .collect();
-        
+
         Ok(readers)
     }
     fn open_reader(&self, name: String) -> Result<u64> {
         let context = &self.ctx;
         let mut vname = name.as_bytes().to_vec();
         vname.push(0u8);
-        
+
         let card = context
             .connect(
                 CStr::from_bytes_with_nul(&vname[..]).unwrap(),
-                pcsc::ShareMode::Exclusive,
+                pcsc::ShareMode::Shared,
                 pcsc::Protocols::ANY,
             )
             .map_err(|e| RpcErr {
@@ -95,12 +94,15 @@ impl Rpc for RpcImpl {
         })?;
         let mut name_buf = vec![0u8; name_len];
         let mut atr_buf = vec![0u8; atr_len];
-        let status = card.status2(&mut name_buf[..], &mut atr_buf[..]).map_err(|e| RpcErr {
-            code: ErrorCode::ServerError(-1),
-            message: e.description().to_string(),
-            data: None,
-        })?;
-        let readers: Vec<String> = status.reader_names()
+        let status = card
+            .status2(&mut name_buf[..], &mut atr_buf[..])
+            .map_err(|e| RpcErr {
+                code: ErrorCode::ServerError(-1),
+                message: e.description().to_string(),
+                data: None,
+            })?;
+        let readers: Vec<String> = status
+            .reader_names()
             .map(|s| s.to_str().unwrap().to_string())
             .collect();
         //Ok(1)
@@ -109,7 +111,7 @@ impl Rpc for RpcImpl {
             "atr": status.atr()
         }))
     }
-    fn get_cert(&self, fd: u64) -> Result<Value>{
+    fn get_cert(&self, fd: u64) -> Result<Value> {
         let fds = self.fd.read().unwrap();
         let card = &fds[fd as usize];
         let mut responder = Apdu::new(|data| {
@@ -119,11 +121,9 @@ impl Rpc for RpcImpl {
         responder.select_jpki_ap().unwrap();
         responder.select_jpki_cert_auth().unwrap();
         let cert = responder.read_binary().unwrap();
-        Ok(json!({
-            "cert": cert
-        }))
+        Ok(json!({ "cert": cert }))
     }
-    fn compute_sig(&self, fd: u64, pin: String, hashHex: String) -> Result<Value>{
+    fn compute_sig(&self, fd: u64, pin: String, hash_hex: String) -> Result<Value> {
         let fds = self.fd.read().unwrap();
         let card = &fds[fd as usize];
         let mut responder = Apdu::new(|data| {
@@ -134,10 +134,20 @@ impl Rpc for RpcImpl {
         responder.select_jpki_auth_pin().unwrap();
         responder.verify_pin(pin.as_str()).unwrap();
         responder.select_jpki_auth_key().unwrap();
-        let hash = decode(hashHex).unwrap();
-        let sig = responder.compute_sig(&hash[..]);
-        Ok(json!({
-            "sig": sig
-        }))
+        let hash = decode(hash_hex).unwrap();
+        let sig = responder.compute_sig(&hash[..]).unwrap();
+        Ok(json!({ "sig": sig }))
+    }
+   
+    fn reconnect(&self, fd: u64) -> Result<u64> {
+        let mut fds = self.fd.write().unwrap();
+        let mut card = &mut fds[fd as usize];
+        card.reconnect(pcsc::ShareMode::Shared, pcsc::Protocols::ANY, pcsc::Disposition::ResetCard)
+            .map_err(|e| RpcErr {
+                code: ErrorCode::ServerError(-1),
+                message: e.description().to_string(),
+                data: None,
+            })?;
+        Ok(fd)
     }
 }
