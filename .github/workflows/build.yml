@@ -8,8 +8,8 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            artifact_name: mynaconnect-daemon
-            asset_name: mynaconnect-daemon-linux-x86_64
+            artifact_name: mynad
+            asset_name: mynad-linux-x86_64
     name: Build daemon for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
