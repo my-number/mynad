@@ -1,0 +1,25 @@
+name: "Build daemon"
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: mynaconnect-daemon
+            asset_name: mynaconnect-daemon-linux-x86_64
+    name: Build daemon for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install libpcsc
+        run: sudo apt-get install libpcsclite-dev
+        if:  matrix.os == 'ubuntu-latest'
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Build
+        run: cargo check

@@ -1,0 +1,41 @@
+name: "Build daemon"
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: mynaconnect-daemon
+            asset_name: mynaconnect-daemon-linux-x86_64
+          - os: windows-latest
+            artifact_name: mynaconnect-daemon.exe
+            asset_name: mynaconnect-daemon-windows-x86_64
+          - os: macos-latest
+            artifact_name: mynaconnect-daemon
+            asset_name: mynaconnect-daemon-macos-x86_64
+    name: Build daemon for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install libpcsc
+        run: sudo apt-get install libpcsclite-dev
+        if:  matrix.os == 'ubuntu-latest'
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Build
+        run: cargo build --release
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: target/release/${{ matrix.artifact_name }}
+        asset_name: ${{ matrix.asset_name }}
+        tag: ${{ github.ref }}
