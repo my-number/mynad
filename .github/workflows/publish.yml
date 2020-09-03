@@ -12,13 +12,13 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: mynad
-            asset_name: mynad-linux-x86_64
+            asset_name: mynad-linux-x86_64.zip
           - os: windows-latest
             artifact_name: mynad.exe
-            asset_name: mynad-windows-x86_64.exe
+            asset_name: mynad-windows-x86_64.zip
           - os: macos-latest
             artifact_name: mynad
-            asset_name: mynad-macos-x86_64
+            asset_name: mynad-macos-x86_64.zip
     name: Build daemon for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -32,10 +32,27 @@ jobs:
           toolchain: stable
       - name: Build
         run: cargo build --release
+      - name: compress files
+        env:
+          ZIP_FILE: ${{ matrix.asset_name }}.zip
+          EXE_FILE: ${{ matrix.artifact_name }}
+        if: matrix.os != 'windows-latest'
+        run: |
+          mv target/release/$EXE_FILE .
+          zip $ZIP_FILE $EXE_FILE INSTALL.md
+      - name: compress files
+        env:
+          ZIP_FILE: ${{ matrix.asset_name }}.zip
+          EXE_FILE: ${{ matrix.artifact_name }}
+        if: matrix.os == 'windows-latest'
+        run: |
+          mv target/release/$EXE_FILE C:\myna
+          mv INSTALL.md C:\myna
+          Compress-Archive -Path C:\myna -DestinationPath .\%ZIP_FILE%
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/${{ matrix.artifact_name }}
+          file: ${{ matrix.asset_name }}.zip
           asset_name: ${{ matrix.asset_name }}
           tag: ${{ github.ref }}
