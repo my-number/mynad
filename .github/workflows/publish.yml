@@ -15,7 +15,7 @@ jobs:
             asset_name: mynad-linux-x86_64
           - os: windows-latest
             artifact_name: mynad.exe
-            asset_name: mynad-windows-x86_64.exe
+            asset_name: mynad-windows-x86_64
           - os: macos-latest
             artifact_name: mynad
             asset_name: mynad-macos-x86_64
@@ -32,10 +32,15 @@ jobs:
           toolchain: stable
       - name: Build
         run: cargo build --release
+      - name: compress files
+        env:
+          ZIP_FILE: ${{ matrix.asset_name }}.zip
+          EXE_FILE: target/release/${{ matrix.artifact_name }}
+        run: zip $ZIP_FILE $EXE_FILE INSTALL.md
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/${{ matrix.artifact_name }}
+          file: ${{ matrix.asset_name }}.zip
           asset_name: ${{ matrix.asset_name }}
           tag: ${{ github.ref }}
