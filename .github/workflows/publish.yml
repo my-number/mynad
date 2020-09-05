@@ -12,13 +12,13 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: mynad
-            asset_name: mynad-linux-x86_64
+            asset_name: mynad-linux-x86_64.zip
           - os: windows-latest
             artifact_name: mynad.exe
             asset_name: mynad-windows-x86_64
           - os: macos-latest
             artifact_name: mynad
-            asset_name: mynad-macos-x86_64
+            asset_name: mynad-macos-x86_64.zip
     name: Build daemon for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -35,8 +35,20 @@ jobs:
       - name: compress files
         env:
           ZIP_FILE: ${{ matrix.asset_name }}.zip
-          EXE_FILE: target/release/${{ matrix.artifact_name }}
-        run: zip $ZIP_FILE $EXE_FILE INSTALL.md
+          EXE_FILE: ${{ matrix.artifact_name }}
+        if: matrix.os != 'windows-latest'
+        run: |
+          mv target/release/$EXE_FILE .
+          zip $ZIP_FILE $EXE_FILE INSTALL.md
+      - name: compress files
+        env:
+          ZIP_FILE: ${{ matrix.asset_name }}.zip
+          EXE_FILE: ${{ matrix.artifact_name }}
+        if: matrix.os == 'windows-latest'
+        run: |
+          mv target/release/$EXE_FILE C:\myna
+          mv INSTALL.md C:\myna
+          Compress-Archive -Path C:\myna -DestinationPath .\%ZIP_FILE%
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
