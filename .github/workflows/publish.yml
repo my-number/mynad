@@ -15,7 +15,7 @@ jobs:
             asset_name: mynad-linux-x86_64.zip
           - os: windows-latest
             artifact_name: mynad.exe
-            asset_name: mynad-windows-x86_64
+            asset_name: mynad-windows-x86_64.zip
           - os: macos-latest
             artifact_name: mynad
             asset_name: mynad-macos-x86_64.zip
@@ -34,18 +34,19 @@ jobs:
         run: cargo build --release
       - name: compress files
         env:
-          ZIP_FILE: ${{ matrix.asset_name }}.zip
+          ZIP_FILE: ${{ matrix.asset_name }}
           EXE_FILE: ${{ matrix.artifact_name }}
         if: matrix.os != 'windows-latest'
         run: |
           mv target/release/$EXE_FILE .
           zip $ZIP_FILE $EXE_FILE INSTALL.md
-      - name: compress files
+      - name: compress files(Windows)
         env:
-          ZIP_FILE: ${{ matrix.asset_name }}.zip
+          ZIP_FILE: ${{ matrix.asset_name }}
           EXE_FILE: ${{ matrix.artifact_name }}
         if: matrix.os == 'windows-latest'
         run: |
+          mkdir C:\myna
           mv target/release/$EXE_FILE C:\myna
           mv INSTALL.md C:\myna
           Compress-Archive -Path C:\myna -DestinationPath .\%ZIP_FILE%
@@ -53,6 +54,6 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ matrix.asset_name }}.zip
+          file: ${{ matrix.asset_name }}
           asset_name: ${{ matrix.asset_name }}
           tag: ${{ github.ref }}
