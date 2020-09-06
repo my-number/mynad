@@ -50,8 +50,6 @@ jobs:
           mv .\target\release\$env:EXE_FILE C:\myna
           mv INSTALL.md C:\myna
           Compress-Archive -Path C:\myna -DestinationPath .\$env:ZIP_FILE
-          dir C:\myna
-          dir .\
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
