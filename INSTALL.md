@@ -5,8 +5,8 @@
 ご利用のOSに合わせた実行ファイルをダウンロードしてください
 
 - [Windows](https://github.com/my-number/mynad/releases/latest/download/mynad-windows-x86_64.exe)
-- [macOS](https://github.com/my-number/mynad/releases/latest/download/mynad-macos-x86_64)
-- [Linux](https://github.com/my-number/mynad/releases/latest/download/mynad-linux-x86_64)
+- [macOS](https://github.com/my-number/mynad/releases/latest/download/mynad-macos-x86_64.zip)
+- [Linux](https://github.com/my-number/mynad/releases/latest/download/mynad-linux-x86_64.zip)
 
 ## 2. 実行
 
