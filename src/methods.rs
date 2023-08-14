@@ -1,3 +1,4 @@
+#![allow(non_snake_case)]
 use crate::error::Error;
 use crate::utils::open_card;
 use hex::decode;
@@ -82,7 +83,8 @@ impl Methods for RpcImpl {
         let buflen = context.list_readers_len()?;
         let mut buf: Vec<u8> = vec![0u8; buflen];
         let reader_iter = context.list_readers(&mut buf)?;
-        let readers: Vec<Reader> = reader_iter.map(|raw_name| {
+        let readers: Vec<Reader> = reader_iter
+            .map(|raw_name| {
                 let card_result = context.connect(raw_name, ShareMode::Shared, Protocols::ANY);
 
                 let mut mynumber_card_info: Option<MynumberCardInfo> = None;
