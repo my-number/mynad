@@ -9,6 +9,7 @@ jobs:
   build:
     strategy:
       matrix:
+        fail-fast: false
         include:
           - os: ubuntu-latest
             artifact_name: mynad
@@ -21,7 +22,6 @@ jobs:
             asset_name: mynad-macos-x86_64.zip
     name: Build daemon for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    fail-fast: false
     steps:
       - uses: actions/checkout@v2
       - name: Install libpcsc
