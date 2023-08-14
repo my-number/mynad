@@ -21,11 +21,12 @@ jobs:
             asset_name: mynad-macos-x86_64.zip
     name: Build daemon for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    fail-fast: false
     steps:
       - uses: actions/checkout@v2
       - name: Install libpcsc
         run: sudo apt-get install libpcsclite-dev
-        if:  matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest'
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
