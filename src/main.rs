@@ -46,7 +46,6 @@ fn main() {
     // if linux...
     #[cfg(target_os = "linux")]
     {
-        
         use daemonize::Daemonize;
         // if daemon, run as daemon
         if matches.opt_present("d") {
@@ -77,6 +76,6 @@ fn run_server(listen_addr: std::net::SocketAddr) {
         .start_http(&listen_addr)
         .expect("Server must start with no issues");
 
-    println!("Listening on {}", listen_addr)
+    println!("Listening on {}", listen_addr);
     server.wait()
 }

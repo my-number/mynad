@@ -8,8 +8,8 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
-        fail-fast: false
         include:
           - os: ubuntu-latest
             artifact_name: mynad
