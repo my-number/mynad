@@ -1,8 +1,8 @@
 name: "Build daemon"
 
 on:
+  workflow_dispatch:
   push:
-    workflow_dispatch:
     tags:
       - "v*"
     branches:
@@ -16,12 +16,15 @@ jobs:
           - os: ubuntu-latest
             artifact_name: mynad
             asset_name: mynad-linux-x86_64.zip
+            target: x86_64-unknown-linux-gnu
           - os: windows-latest
             artifact_name: mynad.exe
             asset_name: mynad-windows-x86_64.zip
+            target: x86_64-pc-windows-msvc
           - os: macos-latest
             artifact_name: mynad
             asset_name: mynad-macos-x86_64.zip
+            target: x86_64-apple-darwin
     name: Build daemon for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
@@ -30,11 +33,9 @@ jobs:
         run: sudo apt-get install libpcsclite-dev
         if: matrix.os == 'ubuntu-latest'
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+        uses: dtolnay/rust-toolchain@stable
       - name: Build
-        run: cargo build --release
+        run: cargo build --released
       - name: compress files
         env:
           ZIP_FILE: ${{ matrix.asset_name }}
