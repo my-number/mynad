@@ -37,7 +37,8 @@ fn main() {
         }
     };
 
-    #[cfg(not(windows))]
+    // do if unix
+    #[cfg(unix)]
     {
         use daemonize::Daemonize;
         // if daemon, run as daemon
@@ -59,6 +60,7 @@ fn main() {
         }
     }
 
+    // do if windows
     #[cfg(windows)]
     {
         run_server(listen_addr);

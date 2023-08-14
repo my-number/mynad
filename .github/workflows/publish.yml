@@ -31,13 +31,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
+
       - name: Install libpcsc
         run: sudo apt-get install libpcsclite-dev
         if: matrix.os == 'ubuntu-latest'
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
+
       - name: compress files
         env:
           ZIP_FILE: ${{ matrix.asset_name }}
@@ -46,6 +47,7 @@ jobs:
         run: |
           mv target/release/$EXE_FILE .
           zip $ZIP_FILE $EXE_FILE INSTALL.md
+
       - name: compress files(Windows)
         env:
           ZIP_FILE: ${{ matrix.asset_name }}
