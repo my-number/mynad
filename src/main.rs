@@ -1,5 +1,4 @@
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")] // disable console window on windows release build
-use daemonize::Daemonize;
 use getopts::Options;
 use jsonrpc_http_server::jsonrpc_core::*;
 use jsonrpc_http_server::ServerBuilder;
@@ -38,17 +37,12 @@ fn main() {
         }
     };
 
-    // if windows, directly run server
-    #[cfg(target_os = "windows")]
+    #[cfg(unix)]
     {
-        run_server(listen_addr);
-    }
-
-    // if linux...
-    #[cfg(target_os = "linux")]
-    {
+        use daemonize::Daemonize;
         // if daemon, run as daemon
         if matches.opt_present("d") {
+            println!("Running as daemon...");
             let daemonize = Daemonize::new();
             match daemonize.start() {
                 Ok(_) => {
@@ -64,6 +58,11 @@ fn main() {
             run_server(listen_addr);
         }
     }
+
+    #[cfg(not(unix))]
+    {
+        run_server(listen_addr);
+    }
 }
 
 fn run_server(listen_addr: std::net::SocketAddr) {
@@ -74,5 +73,7 @@ fn run_server(listen_addr: std::net::SocketAddr) {
     let server = ServerBuilder::new(io)
         .start_http(&listen_addr)
         .expect("Server must start with no issues");
+
+    println!("Listening on {}", listen_addr);
     server.wait()
 }

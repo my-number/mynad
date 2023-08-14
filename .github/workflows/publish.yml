@@ -4,10 +4,13 @@ on:
   push:
     tags:
       - "v*"
+    branches:
+      - master
 
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -25,7 +28,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install libpcsc
         run: sudo apt-get install libpcsclite-dev
-        if:  matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest'
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -50,10 +53,17 @@ jobs:
           mv .\target\release\$env:EXE_FILE C:\myna
           mv INSTALL.md C:\myna
           Compress-Archive -Path C:\myna -DestinationPath .\$env:ZIP_FILE
-      - name: Upload binaries to release
+      - name: Upload binaries to release (if tag)
         uses: svenstaro/upload-release-action@v2
+        if: github.ref_type == 'tag'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ matrix.asset_name }}
           asset_name: ${{ matrix.asset_name }}
           tag: ${{ github.ref }}
+      - name: Upload artifacts (if branch)
+        uses: actions/upload-artifact@v2
+        if: github.ref_type == 'branch'
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.asset_name }}
