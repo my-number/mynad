@@ -35,7 +35,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Build
-        run: cargo build --released
+        run: cargo build --release
       - name: compress files
         env:
           ZIP_FILE: ${{ matrix.asset_name }}
