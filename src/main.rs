@@ -7,7 +7,27 @@ mod error;
 mod methods;
 mod utils;
 use methods::{Methods, RpcImpl};
+
+macro_rules! get_compile_host {
+    () => {
+        if cfg!(target_os = "linux") {
+            "Linux"
+        } else if cfg!(target_os = "windows") {
+            "Windows"
+        } else if cfg!(target_os = "macos") {
+            "macOS"
+        } else {
+            "Unknown"
+        }
+    };
+}
+
 fn main() {
+    let host_system = get_compile_host!();
+    println!("Compile host system: {}", host_system);
+}
+
+fn _main() {
     // command line option parse phase
     let args: Vec<String> = std::env::args().collect();
     let mut opts = Options::new();
