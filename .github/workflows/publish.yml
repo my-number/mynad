@@ -29,7 +29,7 @@ jobs:
     name: Build daemon for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@latest
+      - uses: actions/checkout@v3
       - name: Install libpcsc
         run: sudo apt-get install libpcsclite-dev
         if: matrix.os == 'ubuntu-latest'
@@ -64,7 +64,7 @@ jobs:
           asset_name: ${{ matrix.asset_name }}
           tag: ${{ github.ref }}
       - name: Upload artifacts (if not tag)
-        uses: actions/upload-artifact@latest
+        uses: actions/upload-artifact@v3
         if: github.ref_type != 'tag'
         with:
           name: ${{ matrix.artifact_name }}
