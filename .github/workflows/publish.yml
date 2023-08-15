@@ -64,9 +64,9 @@ jobs:
           file: ${{ matrix.asset_name }}
           asset_name: ${{ matrix.asset_name }}
           tag: ${{ github.ref }}
-      - name: Upload artifacts (if branch)
+      - name: Upload artifacts (if not tag)
         uses: actions/upload-artifact@v2
-        if: github.ref_type == 'branch'
+        if: github.ref_type != 'tag'
         with:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.asset_name }}
