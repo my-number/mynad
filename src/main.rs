@@ -4,9 +4,12 @@ use jsonrpc_http_server::jsonrpc_core::*;
 use jsonrpc_http_server::ServerBuilder;
 
 mod error;
+mod man_con;
 mod methods;
 mod utils;
 use methods::{Methods, RpcImpl};
+
+use crate::man_con::ManCon;
 fn main() {
     // command line option parse phase
     let args: Vec<String> = std::env::args().collect();
@@ -67,7 +70,8 @@ fn main() {
 
 fn run_server(listen_addr: std::net::SocketAddr) {
     let mut io = IoHandler::default();
-    let rpc: RpcImpl = Default::default();
+    let man_con: ManCon = Default::default();
+    let rpc: RpcImpl = RpcImpl { man_con: man_con };
     io.extend_with(rpc.to_delegate());
 
     let server = ServerBuilder::new(io)

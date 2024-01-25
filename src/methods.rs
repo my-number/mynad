@@ -1,5 +1,8 @@
 #![allow(non_snake_case)]
+use std::ops::Deref;
+
 use crate::error::Error;
+use crate::man_con::ManCon;
 use crate::utils::open_card;
 use hex::decode;
 use jsonrpc_core::types::Value;
@@ -28,8 +31,8 @@ pub struct Reader {
     mynumberCardInfo: Option<MynumberCardInfo>,
 }
 
-struct Responder(Card);
-impl Apdu for Responder {
+struct Responder<'a>(&'a Card);
+impl<'a> Apdu for Responder<'a> {
     type TransErr = pcsc::Error;
     fn transmit(&self, data: Vec<u8>) -> Result<Vec<u8>, Self::TransErr> {
         let card = &self.0;
@@ -39,7 +42,7 @@ impl Apdu for Responder {
         Ok(result.to_vec())
     }
 }
-impl Responder {
+impl<'a> Responder<'a> {
     fn check_mynumber_card(&self) -> Result<(), Error> {
         if self.is_mynumber_card()? {
             Ok(())
@@ -64,13 +67,20 @@ pub trait Methods {
     #[rpc(name = "computeAuthSig")]
     fn compute_auth_sig(&self, name: String, pin: String, hash_hex: String)
         -> Result<Value, Error>;
+    #[rpc(name = "devConnect")]
+    fn connect(&self, name: String) -> Result<(), Error>;
+    #[rpc(name = "devDisonnect")]
+    fn disconnect(&self) -> Result<(), Error>;
+    #[rpc(name = "devSendAPDU")]
+    fn send_apdu(&self, data: Vec<u8>) -> Result<Vec<u8>, Error>;
+    #[rpc(name = "devSelectDF")]
+    fn select_df(&self, name: String, data: Vec<u8>) -> Result<(), Error>;
+    #[rpc(name = "devSelectEF")]
+    fn select_ef(&self, name: String, data: Vec<u8>) -> Result<(), Error>;
 }
 
-pub struct RpcImpl {}
-impl Default for RpcImpl {
-    fn default() -> Self {
-        Self {}
-    }
+pub struct RpcImpl {
+    pub man_con: ManCon,
 }
 
 impl Methods for RpcImpl {
@@ -90,7 +100,7 @@ impl Methods for RpcImpl {
                 let mut mynumber_card_info: Option<MynumberCardInfo> = None;
                 let error: Option<u32> = match card_result {
                     Ok(card) => {
-                        let responder = Responder(card);
+                        let responder = Responder(&card);
                         let is_mynumber_card = responder.is_mynumber_card().unwrap_or(false);
                         if is_mynumber_card {
                             mynumber_card_info = Some(MynumberCardInfo {
@@ -102,7 +112,7 @@ impl Methods for RpcImpl {
                                     .unwrap_or(0u8),
                             })
                         }
-                        let _ = responder.0.disconnect(Disposition::LeaveCard);
+                        let _ = card.disconnect(Disposition::LeaveCard);
                         None
                     }
                     Err(e) => Some(e as u32),
@@ -138,7 +148,7 @@ impl Methods for RpcImpl {
     fn get_auth_cert(&self, name: String) -> Result<Value, Error> {
         let card = open_card(name)?;
 
-        let responder = Responder(card);
+        let responder = Responder(&card);
 
         responder.check_mynumber_card()?;
         let cert = responder.get_cert(KeyType::UserAuth)?;
@@ -147,7 +157,7 @@ impl Methods for RpcImpl {
     fn get_sign_cert(&self, name: String) -> Result<Value, Error> {
         let card = open_card(name)?;
 
-        let responder = Responder(card);
+        let responder = Responder(&card);
 
         responder.check_mynumber_card()?;
         let cert = responder.get_cert(KeyType::DigitalSign)?;
@@ -164,12 +174,47 @@ impl Methods for RpcImpl {
         }
         let card = open_card(name)?;
 
-        let responder = Responder(card);
+        let responder = Responder(&card);
 
         responder.check_mynumber_card()?;
         let cert = responder.get_cert(KeyType::UserAuth)?;
         let hash = decode(hash_hex)?;
         let sig = responder.compute_sig(&pin, &hash[..], KeyType::UserAuth)?;
         Ok(json!({ "sig": sig, "cert": cert}))
+    }
+
+    fn connect(&self, name: String) -> Result<(), Error> {
+        self.man_con.connect(name)?;
+        Ok(())
+    }
+
+    fn disconnect(&self) -> Result<(), Error> {
+        self.man_con.disconnect()?;
+        Ok(())
+    }
+
+    fn send_apdu(&self, data: Vec<u8>) -> Result<Vec<u8>, Error> {
+        let got_card = self.man_con.get_card();
+        let read_card = got_card.read();
+        let unwrap_card = read_card.unwrap();
+        let deref_card = unwrap_card.deref().as_ref();
+        let card2 = deref_card.unwrap();
+        let responder = Responder(card2);
+        let res = responder.transmit(data)?;
+        Ok(res)
+    }
+
+    fn select_df(&self, name: String, data: Vec<u8>) -> Result<(), Error> {
+        let card = open_card(name)?;
+        let responder = Responder(&card);
+        responder.select_df(&data)?;
+        Ok(())
+    }
+
+    fn select_ef(&self, name: String, data: Vec<u8>) -> Result<(), Error> {
+        let card = open_card(name)?;
+        let responder = Responder(&card);
+        responder.select_ef(&data)?;
+        Ok(())
     }
 }
