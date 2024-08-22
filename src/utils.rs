@@ -6,7 +6,7 @@ pub(crate) fn open_card(name: String) -> Result<Card, PcscError> {
     vname.push(0u8);
     context.connect(
         unsafe { CStr::from_bytes_with_nul_unchecked(&vname[..]) },
-        pcsc::ShareMode::Exclusive,
+        pcsc::ShareMode::Shared,
         pcsc::Protocols::ANY,
     )
 }
